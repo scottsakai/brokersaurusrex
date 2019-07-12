@@ -2,6 +2,7 @@
 #include <map>
 #include "pool.h"
 #include "worker.h"
+#include <chrono>
 
 Pool::Pool() {}
 
@@ -79,18 +80,38 @@ void Pool::SetBusy(int widx)
 
 /*
  * Get a worker from the idle worker list
- * The worker will need to set itself as busy.
+ * This will also mark the worker as busy.
  */
 Worker* Pool::GetIdleWorker()
 {
     Worker* w;
+    int id;
     std::lock_guard<std::mutex> locked(this->wlock);
     
 
     auto it = this->idleWorkers.begin();
+    if ( it == this->idleWorkers.end() )
+    {
+	//fprintf(stderr, "No idle workers.\n");
+	return NULL;
+    }
     w = it->second;
-    this->idleWorkers.erase(it->first);
+    id = it->first;
+    this->idleWorkers.erase(id);
+    this->busyWorkers[id] = w;
     return w;
 }
 
 
+/*
+ * Blocks until there are idle workers available or
+ * some short period of time.
+ *
+ * Make sure to re-check the result of GetIdleWorker() as it
+ * may still return NULL.
+ */
+void Pool::WaitForIdleWorker()
+{
+    std::unique_lock<std::mutex> wglw(this->wglock);
+    this->waitgate.wait_for(wglw, std::chrono::milliseconds(10));
+}

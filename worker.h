@@ -8,6 +8,7 @@
 #include <condition_variable>
 #include <unistd.h>
 #include <string.h>
+#include <atomic>
 
 class Pool;
 /*
@@ -39,7 +40,7 @@ class Worker
     std::mutex stoplock;
     int myId;
     Pool* workerPool;
-    bool keepGoing;
+    std::atomic<bool> keepGoing;
 };
 
 #endif

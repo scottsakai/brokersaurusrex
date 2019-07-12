@@ -9,11 +9,12 @@
 
 Worker::Worker(int id, Pool* p)
 {
-    this->keepGoing = true;
+    this->keepGoing.store(true, std::memory_order_relaxed);
     this->myId = id;
     this->workerPool = p;
 
     this->workerPool->AddWorker(this, this->myId);
+    //fprintf(stderr,"Init worker %d at %x\n", id, this);
 }
 
 /*
@@ -29,6 +30,7 @@ void Worker::RunWrap(Worker* c)
  */
 void Worker::Add(const char* l)
 {
+    //fprintf(stderr,"Add() worker %d at %x\n", this->myId, this);
     this->linelock.lock();
     this->lines.push_back(l);
     this->linelock.unlock();
@@ -39,19 +41,13 @@ void Worker::Add(const char* l)
  */
 void Worker::Loop()
 {
-    bool run = true;
 
     // wrappers for mutex since we need to release locks before the scope
     // disappears
     std::unique_lock<std::mutex> rlw(this->runlock);
-    //std::unique_lock<std::mutex> slw(this->stoplock);
-    while(run)
+    while(this->keepGoing.load(std::memory_order_relaxed))
     {
 	this->rungate.wait(rlw);
-	this->workerPool->SetBusy(this->myId);
-	this->stoplock.lock();
-	run = this->keepGoing;
-	this->stoplock.unlock();
 	this->linelock.lock();
 	for ( std::string & s : this->lines )
 	{
@@ -69,9 +65,7 @@ void Worker::Loop()
  */
 void Worker::Drain()
 {
-    this->stoplock.lock();
-    this->keepGoing = false;
-    this->stoplock.unlock();
+    this->keepGoing.store(false, std::memory_order_relaxed);
     this->Release();
 }
 
@@ -80,6 +74,5 @@ void Worker::Drain()
  */
 void Worker::Release()
 {
-    fprintf(stderr,"Thread released\n");
     this->rungate.notify_one();
 }

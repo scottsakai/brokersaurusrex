@@ -40,12 +40,20 @@ int main(int argc, char* argv[])
 
     while ( fgets(linebuf, LINESIZE, stdin) != NULL )
     {
-	if ( linecount > 10 )
+	// only shove so many lines into the worker, then set it free
+	// and pick another worker
+	if ( linecount > 1000000 )
 	{
 	    linecount = 0;
 	    v->Release();
-	    v = p.GetIdleWorker();
-	    fprintf(stderr,"Feeding worker %d\n",v->GetId());
+
+	    // sometimes there are no idle workers...
+	    while ( (v = p.GetIdleWorker()) == NULL )
+	    {
+		p.WaitForIdleWorker();
+	    }
+
+	    //fprintf(stderr,"Feeding worker %d\n",v->GetId());
 	}
 
 	    v->Add(linebuf);
