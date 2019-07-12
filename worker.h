@@ -9,6 +9,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <atomic>
+#include "brokersaurusrex.h"
 
 class Pool;
 /*
@@ -27,6 +28,7 @@ class Worker
     Worker(int id, Pool*p);
     static void RunWrap(Worker* c);
     void Add(const char* l);
+    void Compile(RexManifest*);
     void Loop();
     void Release();
     void Drain();
@@ -44,6 +46,7 @@ class Worker
     std::thread * myThread;
     Pool* workerPool;
     std::atomic<bool> keepGoing;
+    RexList rl;
 };
 
 #endif

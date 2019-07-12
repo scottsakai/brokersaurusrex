@@ -17,8 +17,11 @@
 // each thread has a set of regexes to iterate over
 // and check a given line against.
 // this is that set.
-typedef std::vector<RexItem*> rexlist;
+typedef std::vector<RexItem*> RexList;
 
+// to build a RexList, each thread needs to know the regex names and body.
+// store them here.
+typedef std::map<std::string, std::string> RexManifest;
 
 
 #endif

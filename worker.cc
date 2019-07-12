@@ -17,6 +17,16 @@ Worker::Worker(int id, Pool* p)
     //fprintf(stderr,"Init worker %d at %x\n", id, this);
 }
 
+void Worker::Compile(RexManifest* rm)
+{
+    RexItem* ri;
+    for ( auto p : *rm )
+    {
+	//fprintf(stderr, "Compiling %s : %s\n", p.first.c_str(), p.second.c_str());
+	ri = new RexItem(p.first.c_str(), p.second.c_str());
+	this->rl.push_back(ri);
+    }
+}
 /*
  * Use this as the thread entry point
  */
@@ -53,6 +63,10 @@ void Worker::Loop()
 	this->linelock.lock();
 	for ( std::string & s : this->lines )
 	{
+	    for ( RexItem* ri : this->rl )
+	    {
+		ri->DoMatch(s.c_str());
+	    }
 	    //fprintf(stderr,"Got %s", s.c_str());
 	}
 	this->lines.clear();

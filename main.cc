@@ -10,27 +10,22 @@
 int main(int argc, char* argv[])
 {
     RexItem* ri;
-    rexlist r;
+    RexManifest rm;
 
-    
-    ri = new RexItem("ssh-success", 
-      " sshd\\[(?P<pid>\\d+)\\]: Accepted (?P<authmethod>\\S+) for (?P<username>\\S+) from (?P<remaddr>\\S+) port (?P<remport>\\d+)");
-    r.push_back(ri);
+    rm["ssh-success"] = " sshd\\[(?P<pid>\\d+)\\]: Accepted (?P<authmethod>\\S+) for (?P<username>\\S+) from (?P<remaddr>\\S+) port (?P<remport>\\d+)";
 
-
-    ri = new RexItem("ssh-fingerprint",
-      " sshd\\[(?P<pid>\\d+)\\]: Found matching (?P<keytype>\\S+) key: (?P<fingerprint>\\S+)");
-    r.push_back(ri);
+    rm["ssh-fingerprint"] = " sshd\\[(?P<pid>\\d+)\\]: Found matching (?P<keytype>\\S+) key: (?P<fingerprint>\\S+)";
 
     Pool p;
     Worker* w;
     std::thread* th;
 
-    for ( int widx = 0; widx < 10; widx++ )
+    for ( int widx = 0; widx < 2; widx++ )
     {
 	w = new Worker(widx, &p);
 	th = new std::thread(Worker::RunWrap, w);
 	w->SetThread(th);
+	w->Compile(&rm);
     }
 
     char linebuf[LINESIZE];
