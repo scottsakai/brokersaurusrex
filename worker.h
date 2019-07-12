@@ -32,13 +32,16 @@ class Worker
     void Drain();
     int GetId() { return this->myId; }
 
+    void SetThread(std::thread *th) { this->myThread = th; }
+    std::thread* GetThread() { return this->myThread; }
+
     private:
     std::vector<std::string> lines;
     std::mutex linelock;
     std::condition_variable rungate;
     std::mutex runlock;
-    std::mutex stoplock;
     int myId;
+    std::thread * myThread;
     Pool* workerPool;
     std::atomic<bool> keepGoing;
 };

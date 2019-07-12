@@ -1,5 +1,5 @@
 #!/bin/bash
-g++ -O3 -o brokersaurusrex \
+g++ -O3  -o brokersaurusrex \
   main.cc \
   rexitem.cc \
   worker.cc \

@@ -27,13 +27,15 @@ void Worker::RunWrap(Worker* c)
 
 /*
  * Add a line to the input buffer
+ * We're not locking here since Add() should only be called
+ * on an idle worker. the only consumer of Add() is a busy worker.
  */
 void Worker::Add(const char* l)
 {
     //fprintf(stderr,"Add() worker %d at %x\n", this->myId, this);
-    this->linelock.lock();
+    //this->linelock.lock();
     this->lines.push_back(l);
-    this->linelock.unlock();
+    //this->linelock.unlock();
 }
 
 /*
@@ -45,7 +47,7 @@ void Worker::Loop()
     // wrappers for mutex since we need to release locks before the scope
     // disappears
     std::unique_lock<std::mutex> rlw(this->runlock);
-    while(this->keepGoing.load(std::memory_order_relaxed))
+    while(1)
     {
 	this->rungate.wait(rlw);
 	this->linelock.lock();
@@ -55,6 +57,12 @@ void Worker::Loop()
 	}
 	this->lines.clear();
 	this->linelock.unlock();
+	if ( !this->keepGoing.load(std::memory_order_relaxed) )
+	{
+	    //fprintf(stderr,"Bye! worker %d (%x)\n", this->myId, this->myThread);
+	    this->workerPool->DelWorker(this->myId);
+	    return;
+	}
 	this->workerPool->SetIdle(this->myId);
     }
 }
@@ -65,6 +73,7 @@ void Worker::Loop()
  */
 void Worker::Drain()
 {
+    //fprintf(stderr, "Worker::Drain %d (%x)\n", this->myId, this->myThread);
     this->keepGoing.store(false, std::memory_order_relaxed);
     this->Release();
 }

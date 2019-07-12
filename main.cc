@@ -23,19 +23,19 @@ int main(int argc, char* argv[])
     r.push_back(ri);
 
     Pool p;
-
-    Worker w(0,&p);
-    Worker w2(1,&p);
-
+    Worker* w;
     std::thread* th;
-    th = new std::thread(Worker::RunWrap,&w);
 
-    std::thread* th2;
-    th2 = new std::thread(Worker::RunWrap,&w2);
+    for ( int widx = 0; widx < 10; widx++ )
+    {
+	w = new Worker(widx, &p);
+	th = new std::thread(Worker::RunWrap, w);
+	w->SetThread(th);
+    }
 
     char linebuf[LINESIZE];
 
-    Worker* v = p.GetIdleWorker();
+    w = p.GetIdleWorker();
     int linecount;
 
     while ( fgets(linebuf, LINESIZE, stdin) != NULL )
@@ -45,30 +45,27 @@ int main(int argc, char* argv[])
 	if ( linecount > 1000000 )
 	{
 	    linecount = 0;
-	    v->Release();
+	    w->Release();
 
 	    // sometimes there are no idle workers...
-	    while ( (v = p.GetIdleWorker()) == NULL )
+	    while ( (w = p.GetIdleWorker()) == NULL )
 	    {
 		p.WaitForIdleWorker();
 	    }
-
-	    //fprintf(stderr,"Feeding worker %d\n",v->GetId());
 	}
 
-	    v->Add(linebuf);
+	    w->Add(linebuf);
 	    linecount++;
 	//for ( rexlist::iterator it = r.begin(); it != r.end(); ++it )
 	//{
 	//    (*it)->DoMatch(linebuf);
 	//}
     }
+    // make sure the current worker finishes its workload if any
+    w->Drain();
 
-    w.Drain();
-    w2.Drain();
-
-    th->join();
-    th2->join();
+    // and clean up.
+    p.Shutdown();
     return 0;
 }
 

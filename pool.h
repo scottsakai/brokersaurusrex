@@ -14,8 +14,10 @@ class Pool
     public:
     Pool();
     void AddWorker(Worker* w, int widx);
+    void DelWorker(int widx);
     void SetIdle(int widx);
     void SetBusy(int widx);
+    void Shutdown();
     void WaitForIdleWorker();
     Worker* GetIdleWorker();
 
