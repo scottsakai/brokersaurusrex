@@ -24,24 +24,12 @@ RexItem::RexItem(const char* name, const char* regexdef)
 /*
  * Match line against stored re2. Fire off a bro event if matched.
  */
-bool RexItem::DoMatch(const char* line, broker::endpoint* ep)
+bool RexItem::DoMatch(const char* line)
 {
     if ( RE2::PartialMatchN(line, *this->re, 
       &(this->re2args.front()), 
       this->numgroups) )
     {
-	broker::vector ov;
-	ov.resize(this->numgroups);
-	int argno = 0;
-	for ( auto & it : this->matches)
-	{
-	    //fprintf(stderr, "Adding %s at idx %d\n", it.c_str(), argno);
-	    ov[argno++] = it.c_str();
-	}
-	broker::bro::Event e(this->name, ov);
-	ep->publish("/topic/test", e);
-	//printf("Event %s %s\n", this->name.c_str(),
-	//    this->matches[1].c_str());
 	return true;
     }
 

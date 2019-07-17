@@ -13,6 +13,12 @@
 #include <broker/broker.hh>
 #include <broker/bro.hh>
 
+#define LOGINFO_FORWARD_RE "^(?P<start_time>\\S+\\s+\\d+\\s+\\S+)\\s+\\S+\\s+(?:Message )?forwarded from (?P<hostname>\\S+):"
+
+#define LOGINFO_NOFORWARD_RE "^(?P<start_time>\\S+\\s+\\d+\\s+\\S+)\\s+(?P<hostname>\\S+):?"
+
+
+
 class Pool;
 /*
  * This represents a worker thread.
@@ -51,6 +57,8 @@ class Worker
     Pool* workerPool;
     std::atomic<bool> keepGoing;
     RexList rl;
+    RexItem* loginfo;
+    RexItem* loginfo_forwarded;
     broker::endpoint* ep;
 };
 

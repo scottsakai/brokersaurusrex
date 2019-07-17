@@ -6,6 +6,8 @@
 #include <string.h>
 #include "pool.h"
 #include "worker.h"
+#include <broker/broker.hh>
+#include <broker/bro.hh>
 
 Worker::Worker(int id, Pool* p)
 {
@@ -26,6 +28,9 @@ void Worker::Compile(RexManifest* rm)
 	ri = new RexItem(p.first.c_str(), p.second.c_str());
 	this->rl.push_back(ri);
     }
+
+    this->loginfo = new RexItem("loginfo", LOGINFO_NOFORWARD_RE);
+    this->loginfo_forwarded = new RexItem("loginfo_forwarded", LOGINFO_FORWARD_RE);
 }
 /*
  * Use this as the thread entry point
@@ -65,7 +70,35 @@ void Worker::Loop()
 	{
 	    for ( RexItem* ri : this->rl )
 	    {
-		ri->DoMatch(s.c_str(), this->ep);
+		if (ri->DoMatch(s.c_str()) )
+		{
+		    broker::vector ov;
+		    int argno = 0;
+
+		    // populate ov with loginfo first
+		    if ( this->loginfo_forwarded->DoMatch(s.c_str()) )
+		    {
+			ov.resize(ri->GetNumCaptureGroups() + this->loginfo_forwarded->GetNumCaptureGroups());
+			for ( auto it = this->loginfo_forwarded->begin(); it != this->loginfo_forwarded->end(); it++ )
+			{
+			    ov[argno++] = it->c_str();
+			}
+		    } else if ( this->loginfo->DoMatch(s.c_str()) )
+		    {
+			ov.resize(ri->GetNumCaptureGroups() + this->loginfo->GetNumCaptureGroups());
+			for ( auto it = this->loginfo->begin(); it != this->loginfo->end(); it++ )
+			{
+			    ov[argno++] = it->c_str();
+			}
+		    }
+
+		    for ( auto  it = ri->begin(); it != ri->end(); it++ )
+		    {
+			ov[argno++] = it->c_str();
+		    }
+		    broker::bro::Event e(*ri->GetName(), ov);
+		    ep->publish("/topic/test", e);
+		}
 	    }
 	    //fprintf(stderr,"Got %s", s.c_str());
 	}
