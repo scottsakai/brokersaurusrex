@@ -1,7 +1,9 @@
 #!/bin/bash
-g++ -O3  -o brokersaurusrex \
+g++ -Og -ggdb  -o brokersaurusrex \
   main.cc \
   rexitem.cc \
   worker.cc \
   pool.cc \
+  -lbroker \
+  -lcaf_core \
   -lre2 -lpthread

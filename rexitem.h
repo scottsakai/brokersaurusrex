@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <re2/re2.h>
+#include <broker/broker.hh>
 
 // re2argset is a set of RE2::Arg pointers for a specific regex's capture
 // groups.  Do not share this between threads.
@@ -35,7 +36,7 @@ class RexItem
      * Will process and emit a bro event if matched
      * Returns TRUE on match
      */
-    bool DoMatch(const char* line);
+    bool DoMatch(const char* line, broker::endpoint* ep);
 
 }; // end of RexItem class
 

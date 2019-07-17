@@ -4,27 +4,45 @@
 #include "rexitem.h"
 #include "worker.h"
 #include "pool.h"
-
+#include <broker/broker.hh>
+#include <broker/bro.hh>
 
 
 int main(int argc, char* argv[])
 {
     RexItem* ri;
     RexManifest rm;
+    broker::endpoint ep;
 
-    rm["ssh-success"] = " sshd\\[(?P<pid>\\d+)\\]: Accepted (?P<authmethod>\\S+) for (?P<username>\\S+) from (?P<remaddr>\\S+) port (?P<remport>\\d+)";
 
-    rm["ssh-fingerprint"] = " sshd\\[(?P<pid>\\d+)\\]: Found matching (?P<keytype>\\S+) key: (?P<fingerprint>\\S+)";
+    // connect to peer
+    auto epss = ep.make_status_subscriber(true);
+    ep.peer("127.0.0.1", 9998, std::chrono::seconds(2));
+    auto epss_res = epss.get();
+    auto sc = caf::get_if<broker::status>(&epss_res);
+
+    if ( ! ( sc && sc->code() == broker::sc::peer_added) )
+    {
+	fprintf(stderr, "Could not connect to broker peer\n");
+	return 1;
+    }
+
+    fprintf(stderr, "Connected. Spew away!\n");
+
+    rm["ssh_success"] = " sshd\\[(?P<pid>\\d+)\\]: Accepted (?P<authmethod>\\S+) for (?P<username>\\S+) from (?P<remaddr>\\S+) port (?P<remport>\\d+)";
+
+    rm["ssh_fingerprint"] = " sshd\\[(?P<pid>\\d+)\\]: Found matching (?P<keytype>\\S+) key: (?P<fingerprint>\\S+)";
 
     Pool p;
     Worker* w;
     std::thread* th;
 
-    for ( int widx = 0; widx < 2; widx++ )
+    for ( int widx = 0; widx < 4; widx++ )
     {
 	w = new Worker(widx, &p);
 	th = new std::thread(Worker::RunWrap, w);
 	w->SetThread(th);
+	w->SetEndpoint(&ep);
 	w->Compile(&rm);
     }
 
@@ -61,6 +79,9 @@ int main(int argc, char* argv[])
 
     // and clean up.
     p.Shutdown();
+    sleep(3);
+    ep.unpeer("127.0.0.1", 9998);
+    ep.shutdown();
     return 0;
 }
 

@@ -10,6 +10,8 @@
 #include <string.h>
 #include <atomic>
 #include "brokersaurusrex.h"
+#include <broker/broker.hh>
+#include <broker/bro.hh>
 
 class Pool;
 /*
@@ -37,6 +39,8 @@ class Worker
     void SetThread(std::thread *th) { this->myThread = th; }
     std::thread* GetThread() { return this->myThread; }
 
+    void SetEndpoint(broker::endpoint* ep) { this->ep = ep; }
+
     private:
     std::vector<std::string> lines;
     std::mutex linelock;
@@ -47,6 +51,7 @@ class Worker
     Pool* workerPool;
     std::atomic<bool> keepGoing;
     RexList rl;
+    broker::endpoint* ep;
 };
 
 #endif

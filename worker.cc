@@ -65,7 +65,7 @@ void Worker::Loop()
 	{
 	    for ( RexItem* ri : this->rl )
 	    {
-		ri->DoMatch(s.c_str());
+		ri->DoMatch(s.c_str(), this->ep);
 	    }
 	    //fprintf(stderr,"Got %s", s.c_str());
 	}
