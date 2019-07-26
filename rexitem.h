@@ -31,10 +31,14 @@ class RexItem
 
     public:
     RexItem(const char* name, const char* regexdef);
+    int  GetNumCaptureGroups() { return this->numgroups; };
     captureset::const_iterator begin() { return this->matches.begin(); };
     captureset::const_iterator end() { return this->matches.end(); };
-    int  GetNumCaptureGroups() { return this->numgroups; };
     const std::string* GetName() { return &this->name; };
+    const std::string operator[] (std::string k);
+    bool GetCapture(std::string * dest, std::string key);
+    bool GetGroupName(std::string * dest, int offset);
+
 
     /* Attempt to match line
      * Will process and emit a bro event if matched

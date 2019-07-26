@@ -72,31 +72,78 @@ void Worker::Loop()
 	    {
 		if (ri->DoMatch(s.c_str()) )
 		{
+		    broker::vector captures;
 		    broker::vector ov;
+		    std::string groupname;
+		    std::map<std::string, int> argn2i;
 		    int argno = 0;
+		    int groupno = 1;
 
 		    // populate ov with loginfo first
+		    // just the start_time and hostname
 		    if ( this->loginfo_forwarded->DoMatch(s.c_str()) )
 		    {
-			ov.resize(ri->GetNumCaptureGroups() + this->loginfo_forwarded->GetNumCaptureGroups());
+			captures.resize(ri->GetNumCaptureGroups() + this->loginfo_forwarded->GetNumCaptureGroups());
+			groupno = 1;
 			for ( auto it = this->loginfo_forwarded->begin(); it != this->loginfo_forwarded->end(); it++ )
 			{
-			    ov[argno++] = it->c_str();
+			    this->loginfo_forwarded->GetGroupName(&groupname,groupno);
+			    if ( groupname.compare("start_time") == 0 )
+			    {
+				fprintf(stderr,"Parsing start_time\n");
+				captures[argno] = this->tp.Parse(it->c_str());
+			    } else
+			    {
+				captures[argno] = it->c_str();
+			    }
+			    argn2i[groupname] = argno;
+			    fprintf(stderr,"Map argn2i[%s] = %d (%s)\n", groupname.c_str(), argno, it->c_str());
+			    ++groupno;
+			    ++argno;
 			}
 		    } else if ( this->loginfo->DoMatch(s.c_str()) )
 		    {
-			ov.resize(ri->GetNumCaptureGroups() + this->loginfo->GetNumCaptureGroups());
+			captures.resize(ri->GetNumCaptureGroups() + this->loginfo->GetNumCaptureGroups());
+			groupno = 1;
 			for ( auto it = this->loginfo->begin(); it != this->loginfo->end(); it++ )
 			{
-			    ov[argno++] = it->c_str();
+			    this->loginfo->GetGroupName(&groupname,groupno);
+			    if ( groupname.compare("start_time") == 0 )
+			    {
+				fprintf(stderr,"Parsing start_time\n");
+				captures[argno] = this->tp.Parse(it->c_str());
+			    } else
+			    {
+				captures[argno] = it->c_str();
+			    }
+			    argn2i[groupname] = argno;
+			    fprintf(stderr,"Map argn2i[%s] = %d (%s)\n", groupname.c_str(), argno, it->c_str());
+
+			    ++groupno;
+			    ++argno;
 			}
 		    }
 
+		    groupno = 1;
+
 		    for ( auto  it = ri->begin(); it != ri->end(); it++ )
 		    {
-			ov[argno++] = it->c_str();
+			ri->GetGroupName(&groupname, groupno);
+			captures[argno]  = it->c_str();
+			argn2i[groupname] = argno;
+			fprintf(stderr,"Map argn2i[%s] = %d (%s)\n", groupname.c_str(), argno, it->c_str());
+
+			++argno;
+			++groupno;
 		    }
-		    broker::bro::Event e(*ri->GetName(), ov);
+
+		    // just testing!
+		    groupno = 0;
+		    ov.resize(2);
+		    ov[0] = captures.at( argn2i["start_time"] );
+		    ov[1] = captures.at( argn2i["hostname"] );
+		    broker::bro::Event e("blar", ov);
+		    //broker::bro::Event e(*ri->GetName(), ov);
 		    ep->publish("/topic/test", e);
 		}
 	    }

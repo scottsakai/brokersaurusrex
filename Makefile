@@ -1,5 +1,5 @@
-objects = main.o rexitem.o worker.o pool.o
-headers = rexitem.h worker.h pool.h brokersaurusrex.h
+objects = main.o rexitem.o worker.o pool.o timeparser.o
+headers = rexitem.h worker.h pool.h brokersaurusrex.h timeparser.h
 LDFLAGS = -lbroker -lcaf_core -lre2 -lpthread
 #CPPFLAGS = -Og -ggdb
 CPPFLAGS = -O2
