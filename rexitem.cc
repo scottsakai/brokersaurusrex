@@ -56,6 +56,9 @@ const std::string RexItem::operator[] (std::string k)
     // try to get the index then
     matchIndex = n2i.at(k);
 
+    // matches is a 1-based index, so everything is off-by-one
+    matchIndex--;
+
     // then the value
     return this->matches.at(matchIndex);
 }
@@ -82,6 +85,9 @@ bool RexItem::GetCapture(std::string * dest, std::string key)
 
     // try to get the index then
     matchIndex = n2i.at(key);
+
+    // matches is a 1-based index, so everything is off-by-one
+    matchIndex--;
 
     // then the value
     *dest = this->matches.at(matchIndex);

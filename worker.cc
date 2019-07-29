@@ -90,14 +90,12 @@ void Worker::Loop()
 			    this->loginfo_forwarded->GetGroupName(&groupname,groupno);
 			    if ( groupname.compare("start_time") == 0 )
 			    {
-				fprintf(stderr,"Parsing start_time\n");
-				captures[argno] = this->tp.Parse(it->c_str());
+				captures[argno] = broker::timestamp(broker::timespan(std::stoull(*it) * 1000000000));
 			    } else
 			    {
 				captures[argno] = it->c_str();
 			    }
 			    argn2i[groupname] = argno;
-			    fprintf(stderr,"Map argn2i[%s] = %d (%s)\n", groupname.c_str(), argno, it->c_str());
 			    ++groupno;
 			    ++argno;
 			}
@@ -110,15 +108,12 @@ void Worker::Loop()
 			    this->loginfo->GetGroupName(&groupname,groupno);
 			    if ( groupname.compare("start_time") == 0 )
 			    {
-				fprintf(stderr,"Parsing start_time\n");
-				captures[argno] = this->tp.Parse(it->c_str());
+				captures[argno] = broker::timestamp(broker::timespan(std::stoull(*it) * 1000000000));
 			    } else
 			    {
 				captures[argno] = it->c_str();
 			    }
 			    argn2i[groupname] = argno;
-			    fprintf(stderr,"Map argn2i[%s] = %d (%s)\n", groupname.c_str(), argno, it->c_str());
-
 			    ++groupno;
 			    ++argno;
 			}
@@ -131,8 +126,6 @@ void Worker::Loop()
 			ri->GetGroupName(&groupname, groupno);
 			captures[argno]  = it->c_str();
 			argn2i[groupname] = argno;
-			fprintf(stderr,"Map argn2i[%s] = %d (%s)\n", groupname.c_str(), argno, it->c_str());
-
 			++argno;
 			++groupno;
 		    }

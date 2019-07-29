@@ -10,13 +10,12 @@
 #include <string.h>
 #include <atomic>
 #include "brokersaurusrex.h"
-#include "timeparser.h"
 #include <broker/broker.hh>
 #include <broker/bro.hh>
 
-#define LOGINFO_FORWARD_RE "^(?P<start_time>\\S+\\s+\\d+\\s+\\S+)\\s+(?P<relayhost>\\S+)\\s+(?:Message )?forwarded from (?P<hostname>\\S+):"
+#define LOGINFO_FORWARD_RE "^(?P<start_time>\\d+)\\s+(?P<relayhost>\\S+)\\s+(?:Message )?forwarded from (?P<hostname>\\S+):"
 
-#define LOGINFO_NOFORWARD_RE "^(?P<start_time>\\S+\\s+\\d+\\s+\\S+)\\s+(?P<hostname>\\S+):?"
+#define LOGINFO_NOFORWARD_RE "^(?P<start_time>\\d+)\\s+(?P<hostname>\\S+):?"
 
 
 
@@ -61,7 +60,6 @@ class Worker
     RexItem* loginfo;
     RexItem* loginfo_forwarded;
     broker::endpoint* ep;
-    TimeParser tp;
 };
 
 #endif
