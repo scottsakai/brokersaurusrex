@@ -51,14 +51,20 @@ int main(int argc, char* argv[])
     w = p.GetIdleWorker();
     int linecount;
 
+    // xinetd will make sure stuff gets flushed in a timely manner
+    // but we'll still need to send off the work early if things are quiet.
+    auto lastrelease = std::chrono::steady_clock::now();
     while ( fgets(linebuf, LINESIZE, stdin) != NULL )
     {
+	auto now = std::chrono::steady_clock::now();
 	// only shove so many lines into the worker, then set it free
 	// and pick another worker
-	if ( linecount > 1000000 )
+	std::chrono::duration<double> diff = now - lastrelease;
+	if ( linecount > 1000000  || diff.count() > 1 )
 	{
 	    linecount = 0;
 	    w->Release();
+	    lastrelease = std::chrono::steady_clock::now();
 
 	    // sometimes there are no idle workers...
 	    while ( (w = p.GetIdleWorker()) == NULL )

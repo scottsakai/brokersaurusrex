@@ -79,6 +79,11 @@ void Worker::Loop()
 		    int argno = 0;
 		    int groupno = 1;
 
+		    // stuff blows up if no loginfo match
+		    // captures is 0 size if that happens.
+		    // all lines should have loginfo ... right?
+		    captures.resize(ri->GetNumCaptureGroups());
+
 		    // populate ov with loginfo first
 		    // just the start_time and hostname
 		    if ( this->loginfo_forwarded->DoMatch(s.c_str()) )
@@ -124,7 +129,7 @@ void Worker::Loop()
 		    for ( auto  it = ri->begin(); it != ri->end(); it++ )
 		    {
 			ri->GetGroupName(&groupname, groupno);
-			captures[argno]  = it->c_str();
+			captures[argno] = it->c_str();
 			argn2i[groupname] = argno;
 			++argno;
 			++groupno;
@@ -132,9 +137,10 @@ void Worker::Loop()
 
 		    // just testing!
 		    groupno = 0;
-		    ov.resize(2);
-		    ov[0] = captures.at( argn2i["start_time"] );
-		    ov[1] = captures.at( argn2i["hostname"] );
+		    ov.resize(3);
+		    ov[0] = *ri->GetName();
+		    ov[1] = captures.at( argn2i["start_time"] );
+		    ov[2] = captures.at( argn2i["hostname"] );
 		    broker::bro::Event e("blar", ov);
 		    //broker::bro::Event e(*ri->GetName(), ov);
 		    ep->publish("/topic/test", e);
