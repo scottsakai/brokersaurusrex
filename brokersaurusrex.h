@@ -6,6 +6,7 @@
 #include <vector>
 #include <string>
 #include "rexitem.h"
+#include <getopt.h>
 
 /*
  * defs and other stuff for evparse
@@ -23,5 +24,9 @@ typedef std::vector<RexItem*> RexList;
 // store them here.
 typedef std::map<std::string, std::string> RexManifest;
 
-
+// command-line args are described here for getopt
+static struct option cli_opts[] = 
+{
+    {"configfile", required_argument, 0, 'f'},
+};
 #endif
