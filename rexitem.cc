@@ -1,6 +1,9 @@
 #include "rexitem.h"
 #include <broker/bro.hh>
 
+/*
+ * c'tor for when there are no capture groups or you don't care about them
+ */
 RexItem::RexItem(const char* name, const char* regexdef)
 {
     // nobody else really cares what the name is but us.
@@ -18,7 +21,15 @@ RexItem::RexItem(const char* name, const char* regexdef)
     {
 	this->re2args[i] =  new RE2::Arg(&(this->matches[i]));
     }
+}
 
+/* 
+ * c'tor for when you do care about capture groups
+ * make sure to list them!
+ */
+RexItem::RexItem(const char* name, const char* regexdef, std::vector<std::string> gl) : RexItem(name, regexdef)
+{
+    this->grouplist = gl;
 }
 
 /*

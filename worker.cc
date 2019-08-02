@@ -8,15 +8,17 @@
 #include "worker.h"
 #include <broker/broker.hh>
 #include <broker/bro.hh>
+#include <tuple>
 
-Worker::Worker(int id, Pool* p)
+Worker::Worker(int id, Pool* p, std::string topic)
 {
     this->keepGoing.store(true, std::memory_order_relaxed);
     this->myId = id;
     this->workerPool = p;
 
     this->workerPool->AddWorker(this, this->myId);
-    //fprintf(stderr,"Init worker %d at %x\n", id, this);
+    this->topic = topic;
+    //fprintf(stderr,"Init worker %d at %x (topic=%s)\n", id, this, topic.c_str());
 }
 
 void Worker::Compile(RexManifest* rm)
@@ -24,8 +26,12 @@ void Worker::Compile(RexManifest* rm)
     RexItem* ri;
     for ( auto p : *rm )
     {
-	//fprintf(stderr, "Compiling %s : %s\n", p.first.c_str(), p.second.c_str());
-	ri = new RexItem(p.first.c_str(), p.second.c_str());
+	std::string name;
+	std::string regex;
+	std::vector<std::string> grouplist;
+	std::tie(name,regex,grouplist) = p;
+	//fprintf(stderr, "Compiling %s : %s\n", name.c_str(), regex.c_str());
+	ri = new RexItem( name.c_str(), regex.c_str(), grouplist);
 	this->rl.push_back(ri);
     }
 
@@ -134,16 +140,23 @@ void Worker::Loop()
 			++argno;
 			++groupno;
 		    }
-
-		    // just testing!
+		    
+		    // copy in the event args according to grouplist/arglist
+		    std::vector<std::string> grouplist = ri->GetGroupList();
+		    int groupcount = grouplist.size();
+		    ov.resize(groupcount);
 		    groupno = 0;
-		    ov.resize(3);
-		    ov[0] = *ri->GetName();
-		    ov[1] = captures.at( argn2i["start_time"] );
-		    ov[2] = captures.at( argn2i["hostname"] );
-		    broker::bro::Event e("blar", ov);
-		    //broker::bro::Event e(*ri->GetName(), ov);
-		    ep->publish("/topic/test", e);
+
+		    for ( std::string& g: grouplist )
+		    {
+			ov[groupno] = captures.at(argn2i[g]);
+			groupno++;
+		    }
+
+		    const char* ename = (*ri->GetName()).c_str();
+		    //fprintf(stderr, "Event: %s (topic=%s)\n", ename, this->topic.c_str());
+		    broker::bro::Event e(ename, ov);
+		    ep->publish(this->topic.c_str(), e);
 		}
 	    }
 	    //fprintf(stderr,"Got %s", s.c_str());

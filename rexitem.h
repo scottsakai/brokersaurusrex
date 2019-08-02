@@ -28,9 +28,11 @@ class RexItem
     RE2* re;
     int numgroups;
     std::string name;
+    std::vector<std::string> grouplist;
 
     public:
     RexItem(const char* name, const char* regexdef);
+    RexItem(const char* name, const char* regexdef, std::vector<std::string>);
     int  GetNumCaptureGroups() { return this->numgroups; };
     captureset::const_iterator begin() { return this->matches.begin(); };
     captureset::const_iterator end() { return this->matches.end(); };
@@ -38,6 +40,7 @@ class RexItem
     const std::string operator[] (std::string k);
     bool GetCapture(std::string * dest, std::string key);
     bool GetGroupName(std::string * dest, int offset);
+    std::vector<std::string> GetGroupList() { return this->grouplist; };
 
 
     /* Attempt to match line

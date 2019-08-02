@@ -7,6 +7,7 @@
 #include <string>
 #include "rexitem.h"
 #include <getopt.h>
+#include <tuple>
 
 /*
  * defs and other stuff for evparse
@@ -20,9 +21,13 @@
 // this is that set.
 typedef std::vector<RexItem*> RexList;
 
-// to build a RexList, each thread needs to know the regex names and body.
-// store them here.
-typedef std::map<std::string, std::string> RexManifest;
+// to build a RexList, each thread needs to know the regex names, body, and
+// order to present capture groups.  things got complicated.
+// this describes a single regex.
+typedef std::tuple<std::string, std::string, std::vector<std::string>> RexConfig;
+
+// store a list of configs here
+typedef std::vector<RexConfig> RexManifest;
 
 // command-line args are described here for getopt
 static struct option cli_opts[] = 

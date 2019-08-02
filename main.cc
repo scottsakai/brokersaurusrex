@@ -94,6 +94,10 @@ int main(int argc, char* argv[])
 	fprintf(stderr, "Error %s: Missing setting topic\n", configfile.c_str());
 	oopsFound = true;
     }
+    else
+    {
+	topic = conf.lookup("topic").c_str();
+    }
 
     // events
     if ( ! conf.exists("events") )
@@ -158,7 +162,10 @@ int main(int argc, char* argv[])
 	// and the regex
 	const std::string regex = s["regex"];
 
-	rm[name] = regex;
+	// roll them up
+	RexConfig rc = std::make_tuple(name,regex,arglist);
+	rm.push_back(rc);
+	//rm[name] = regex;
     }
 
 
@@ -174,11 +181,7 @@ int main(int argc, char* argv[])
 	return 1;
     }
 
-    fprintf(stderr, "Connected. Spew away!\n");
-
-    //rm["ssh_success"] = " sshd\\[(?P<pid>\\d+)\\]: Accepted (?P<authmethod>\\S+) for (?P<username>\\S+) from (?P<remaddr>\\S+) port (?P<remport>\\d+)";
-
-    //rm["ssh_fingerprint"] = " sshd\\[(?P<pid>\\d+)\\]: Found matching (?P<keytype>\\S+) key: (?P<fingerprint>\\S+)";
+    //fprintf(stderr, "Connected. Spew away!\n");
 
     Pool p;
     Worker* w;
@@ -186,7 +189,7 @@ int main(int argc, char* argv[])
 
     for ( int widx = 0; widx < 4; widx++ )
     {
-	w = new Worker(widx, &p);
+	w = new Worker(widx, &p, topic);
 	th = new std::thread(Worker::RunWrap, w);
 	w->SetThread(th);
 	w->SetEndpoint(&ep);

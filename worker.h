@@ -33,7 +33,7 @@ class Pool;
 class Worker
 {
     public:
-    Worker(int id, Pool*p);
+    Worker(int id, Pool*p, std::string topic);
     static void RunWrap(Worker* c);
     void Add(const char* l);
     void Compile(RexManifest*);
@@ -60,6 +60,7 @@ class Worker
     RexItem* loginfo;
     RexItem* loginfo_forwarded;
     broker::endpoint* ep;
+    std::string topic;
 };
 
 #endif
