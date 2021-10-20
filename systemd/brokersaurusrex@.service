@@ -1,0 +1,13 @@
+[Unit]
+Description=Brokersaurusrex Log-to-Broker Service
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/brokersaurusrex --config=/etc/brokersaurusrex.conf
+Environment="LD_LIBRARY_PATH=/opt/broker/lib"
+StandardInput=socket
+User=broker
+Group=broker
+
+[Install]
+WantedBy=default.target
